@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>do you love me?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blush: #fff0f3;
+    --card: #ffffff;
+    --rose: #e8447d;
+    --rose-deep: #c22a63;
+    --plum: #3a1f2b;
+    --plum-soft: #7a5a63;
+    --pink-soft: #ffd6e0;
+    --heart: #ff4d6d;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 20%, #fff7f8 0%, var(--blush) 55%, #ffe3ea 100%);
+    font-family: 'Nunito', sans-serif;
+    color: var(--plum);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* ambient floating hearts in the background, purely decorative */
+  .bg-heart {
+    position: fixed;
+    top: 100%;
+    font-size: 22px;
+    color: var(--pink-soft);
+    opacity: 0.7;
+    pointer-events: none;
+    animation: rise linear infinite;
+    user-select: none;
+  }
+
+  @keyframes rise {
+    from { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.7; }
+    to   { transform: translateY(-115vh) rotate(25deg); opacity: 0; }
+  }
+
+  .card {
+    position: relative;
+    z-index: 2;
+    background: var(--card);
+    border-radius: 28px;
+    padding: 56px 48px 64px;
+    width: min(90vw, 480px);
+    text-align: center;
+    box-shadow: 0 30px 60px -20px rgba(200, 60, 110, 0.28), 0 0 0 1px rgba(232, 68, 125, 0.06);
+  }
+
+  .question {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: clamp(30px, 6vw, 42px);
+    line-height: 1.15;
+    margin: 0 0 8px;
+    color: var(--plum);
+  }
+
+  .subtext {
+    margin: 0 0 40px;
+    color: var(--plum-soft);
+    font-size: 16px;
+  }
+
+  .button-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    min-height: 64px;
+  }
+
+  button {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+  }
+
+  #yesBtn {
+    background: var(--rose);
+    color: #fff;
+    padding: 16px 36px;
+    box-shadow: 0 12px 24px -8px rgba(232, 68, 125, 0.55);
+  }
+
+  #yesBtn:hover {
+    background: var(--rose-deep);
+    transform: translateY(-2px) scale(1.04);
+  }
+
+  #noBtn {
+    background: var(--pink-soft);
+    color: var(--rose-deep);
+    padding: 16px 36px;
+  }
+
+  /* once it's gone rogue, it becomes fixed-position and roams the viewport */
+  #noBtn.roaming {
+    position: fixed;
+    z-index: 5;
+  }
+
+  .hint {
+    margin-top: 28px;
+    font-size: 14px;
+    color: var(--plum-soft);
+    min-height: 18px;
+  }
+
+  /* ---- reveal state ---- */
+  .reveal {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .reveal.show {
+    display: flex;
+  }
+
+  .big-heart {
+    font-size: 88px;
+    line-height: 1;
+    animation: pop 0.5s cubic-bezier(.26,1.6,.44,1);
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(0); }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  .reveal-text {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    margin: 18px 0 0;
+    color: var(--rose-deep);
+  }
+
+  .reveal-sub {
+    margin: 8px 0 0;
+    color: var(--plum-soft);
+    font-size: 15px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-heart { animation: none; display: none; }
+    #yesBtn:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+
+    <div id="promptState">
+      <h1 class="question">do you love me?</h1>
+      <p class="subtext">be honest.</p>
+
+      <div class="button-row">
+        <button id="yesBtn" onclick="sayYes()">yes</button>
+        <button id="noBtn">no</button>
+      </div>
+
+      <p class="hint" id="hint"></p>
+    </div>
+
+    <div class="reveal" id="revealState">
+      <div class="big-heart">💖</div>
+      <p class="reveal-text">yay! i knew it.</p>
+      <p class="reveal-sub">that's the only correct answer.</p>
+    </div>
+
+  </div>
+
+  <script>
+    const noBtn = document.getElementById('noBtn');
+    const yesBtn = document.getElementById('yesBtn');
+    const hint = document.getElementById('hint');
+    const card = document.querySelector('.card');
+
+    const hints = [
+      "nice try.",
+      "not so fast.",
+      "keep trying \u2014 you won't catch it.",
+      "it's a little shy.",
+      "getting warmer... or colder?",
+      "so close!",
+      "it really doesn't want to be clicked."
+    ];
+    let dodgeCount = 0;
+
+    function moveNoButton() {
+      const btnRect = noBtn.getBoundingClientRect();
+      const w = btnRect.width || 120;
+      const h = btnRect.height || 56;
+      const margin = 16;
+
+      const maxX = window.innerWidth - w - margin;
+      const maxY = window.innerHeight - h - margin;
+
+      const x = Math.max(margin, Math.random() * maxX);
+      const y = Math.max(margin, Math.random() * maxY);
+
+      if (!noBtn.classList.contains('roaming')) {
+        noBtn.classList.add('roaming');
+      }
+
+      noBtn.style.left = x + 'px';
+      noBtn.style.top = y + 'px';
+
+      dodgeCount++;
+      hint.textContent = hints[Math.min(dodgeCount - 1, hints.length - 1)];
+
+      // the more it dodges, the more confident "yes" gets
+      const scale = Math.min(1 + dodgeCount * 0.03, 1.4);
+      yesBtn.style.transform = `scale(${scale})`;
+    }
+
+    // dodge on hover (desktop) and on touch/click attempts (mobile + fallback)
+    noBtn.addEventListener('mouseenter', moveNoButton);
+    noBtn.addEventListener('touchstart', function (e) {
+      e.preventDefault();
+      moveNoButton();
+    }, { passive: false });
+    noBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      moveNoButton();
+    });
+
+    function sayYes() {
+      document.getElementById('promptState').style.display = 'none';
+      document.getElementById('revealState').classList.add('show');
+      launchHeartBurst();
+    }
+
+    function launchHeartBurst() {
+      const symbols = ['💖', '💕', '💗', '💓', '❤️'];
+      for (let i = 0; i < 26; i++) {
+        const el = document.createElement('div');
+        el.className = 'bg-heart';
+        el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.fontSize = (16 + Math.random() * 20) + 'px';
+        el.style.animationDuration = (3.5 + Math.random() * 3) + 's';
+        el.style.animationDelay = (Math.random() * 1.2) + 's';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 8000);
+      }
+    }
+
+    // gentle ambient hearts even before clicking, very sparse
+    function ambientHeart() {
+      const el = document.createElement('div');
+      el.className = 'bg-heart';
+      el.textContent = '💗';
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.fontSize = (14 + Math.random() * 12) + 'px';
+      el.style.animationDuration = (6 + Math.random() * 3) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 10000);
+    }
+    setInterval(ambientHeart, 1800);
+  </script>
+
+</body>
+</html>
